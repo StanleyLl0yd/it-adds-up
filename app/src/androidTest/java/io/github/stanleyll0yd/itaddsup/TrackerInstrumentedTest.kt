@@ -188,6 +188,38 @@ class TrackerInstrumentedTest {
         compose.onNodeWithText("Назад").performScrollTo().performClick()
         await("Сегодня")
         screenshot("dark")
+        try {
+            shell("settings put system font_scale 1.5")
+            shell("wm size 840x1400")
+            scenario?.recreate()
+            await("Сегодня")
+            compose.waitForIdle()
+            compose.onNodeWithText("Деньги", useUnmergedTree = false).assertIsDisplayed()
+            screenshot("large-font")
+            scenario?.onActivity {
+                it.requestedOrientation =
+                    android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            }
+            compose.waitUntil(10000) {
+                app.resources.configuration.orientation ==
+                    android.content.res.Configuration.ORIENTATION_LANDSCAPE
+            }
+            compose.waitForIdle()
+            screenshot("landscape")
+        } finally {
+            shell("settings put system font_scale 1.0")
+            shell("wm size reset")
+        }
+    }
+
+    private fun shell(command: String) {
+        android.os.ParcelFileDescriptor.AutoCloseInputStream(
+                InstrumentationRegistry.getInstrumentation()
+                    .uiAutomation
+                    .executeShellCommand(command)
+            )
+            .bufferedReader()
+            .use { it.readText() }
     }
 
     private fun screenshot(name: String) {
