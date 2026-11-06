@@ -3,7 +3,7 @@ set -euxo pipefail
 # Core scenarios must work with the emulator disconnected from networks.
 adb shell svc wifi disable || true
 adb shell svc data disable || true
-./gradlew connectedDebugAndroidTest --stacktrace
+./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.notClass=io.github.stanleyll0yd.itaddsup.AdsNetworkTest --stacktrace
 # Gradle uninstalls the target after its test run. Reinstall and capture the real
 # application once more before pulling screenshots, without Gradle cleanup.
 adb install -r -t app/build/outputs/apk/debug/app-debug.apk
