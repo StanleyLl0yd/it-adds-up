@@ -1,0 +1,4 @@
+<lint>
+    <!-- Version freshness is tracked by Dependabot; it is not a correctness failure. -->
+    <issue id="GradleDependency,AndroidGradlePluginVersion" severity="informational"/>
+</lint>
