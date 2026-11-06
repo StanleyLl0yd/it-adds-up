@@ -157,7 +157,7 @@ fun ConsentBanner(consent: Boolean) {
     val provider = remember {
         if (BuildConfig.DEBUG) TestAds()
         else if (BuildConfig.YANDEX_BANNER_ID.isNotBlank())
-            runCatching { ProductionAds(BuildConfig.YANDEX_BANNER_ID) }.getOrDefault(NoAds)
+            runCatching<BannerProvider> { ProductionAds(BuildConfig.YANDEX_BANNER_ID) }.getOrDefault(NoAds)
         else NoAds
     }
     LaunchedEffect(Unit) { if (!BuildConfig.DEBUG) allowed = RemoteAdsSwitch.enabled() }
