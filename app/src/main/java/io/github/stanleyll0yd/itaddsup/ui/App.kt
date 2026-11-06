@@ -17,12 +17,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.stanleyll0yd.itaddsup.R
 import io.github.stanleyll0yd.itaddsup.TrackerViewModel
 import io.github.stanleyll0yd.itaddsup.data.*
 import io.github.stanleyll0yd.itaddsup.domain.*
@@ -153,11 +156,16 @@ fun TrackerApp(vm: TrackerViewModel) {
 
 @Composable
 private fun NavGlyph(index: Int) {
-    val names = listOf("День", "Календарь", "Расчёты")
-    Text(
-        listOf("◷", "▦", "₽")[index],
-        modifier = Modifier.clearAndSetSemantics { contentDescription = names[index] },
-        style = MaterialTheme.typography.titleLarge,
+    Icon(
+        painterResource(
+            when (index) {
+                0 -> R.drawable.nav_today
+                1 -> R.drawable.nav_shifts
+                else -> R.drawable.nav_money
+            }
+        ),
+        contentDescription = null,
+        modifier = Modifier.size(24.dp),
     )
 }
 
@@ -170,6 +178,16 @@ fun AppTheme(preferences: Preferences = Preferences(), content: @Composable () -
             "light" -> false
             else -> isSystemInDarkTheme()
         }
+    val view = androidx.compose.ui.platform.LocalView.current
+    SideEffect {
+        val activity = view.context as? android.app.Activity
+        activity?.let {
+            WindowCompat.getInsetsController(it.window, view).apply {
+                isAppearanceLightStatusBars = !dark
+                isAppearanceLightNavigationBars = !dark
+            }
+        }
+    }
     val colors =
         if (preferences.dynamic && Build.VERSION.SDK_INT >= 31) {
             if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
