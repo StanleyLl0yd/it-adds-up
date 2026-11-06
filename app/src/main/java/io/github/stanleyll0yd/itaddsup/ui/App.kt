@@ -520,6 +520,7 @@ private fun CalendarScreen(ledger: Ledger, busy: Boolean, now: Instant, save: (S
     val month = YearMonth.parse(monthText)
     val selected = LocalDate.parse(selectedText)
     var edit by remember { mutableStateOf<Shift?>(null) }
+    var allAudit by remember(selectedText) { mutableStateOf(false) }
     val shift = planned(ledger, selected)
     Page {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -638,9 +639,15 @@ private fun CalendarScreen(ledger: Ledger, busy: Boolean, now: Instant, save: (S
                 Text("Добавить смену")
             }
         }
-        val audits = ledger.audits.filter { it.date == selectedText }.takeLast(10).reversed()
+        val audits =
+            ledger.audits
+                .filter { it.date == selectedText }
+                .takeLast(if (allAudit) Int.MAX_VALUE else 10)
+                .reversed()
         if (audits.isNotEmpty())
             Section("История изменений · ${ledger.audits.count { it.date == selectedText }}") {
+                if (!allAudit && ledger.audits.count { it.date == selectedText } > 10)
+                    TextButton(onClick = { allAudit = true }) { Text("Показать все изменения") }
                 audits.forEach { a ->
                     Text(
                         "${Instant.ofEpochMilli(a.changedAt).atZone(ZoneId.of(schedule.zone)).format(DateTimeFormatter.ofPattern("d MMM HH:mm", ru))} · ${if (a.before == null) "Добавлена" else "Изменена"} · ${Money.text(Earnings.calculate(ShiftJson.decode(a.after)).total)}"

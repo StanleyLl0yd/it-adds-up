@@ -41,9 +41,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: |
-            ./gradlew connectedDebugAndroidTest --stacktrace
-            adb pull /sdcard/Android/data/io.github.stanleyll0yd.itaddsup/files/screenshots screenshots
+          script: bash scripts/device-tests.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -52,4 +50,5 @@ jobs:
             app/build/reports/androidTests/
             app/build/outputs/androidTest-results/
             screenshots/
+            screenshot-test.txt
           retention-days: 14
