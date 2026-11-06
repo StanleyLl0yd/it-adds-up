@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 api="$1"
+export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
 image="system-images;android-${api};google_apis;x86_64"
 # Hosted images already carry accepted SDK licenses. Never auto-accept new terms.
 sdkmanager --install "platforms;android-${api}" "$image" < /dev/null
