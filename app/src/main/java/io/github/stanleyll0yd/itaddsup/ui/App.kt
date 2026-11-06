@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.stanleyll0yd.itaddsup.TrackerViewModel
 import io.github.stanleyll0yd.itaddsup.data.*
 import io.github.stanleyll0yd.itaddsup.domain.*
+import io.github.stanleyll0yd.itaddsup.monetization.ConsentBanner
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -78,6 +79,12 @@ fun TrackerApp(vm: TrackerViewModel) {
     val snackbar = remember { SnackbarHostState() }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var settings by rememberSaveable { mutableStateOf(false) }
+    var suppressAds by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(tab) { suppressAds = false }
+    val saveShift: (Shift) -> Unit = {
+        suppressAds = true
+        vm.confirm(it)
+    }
     LaunchedEffect(message) {
         message?.let {
             snackbar.showSnackbar(it)
@@ -130,8 +137,11 @@ fun TrackerApp(vm: TrackerViewModel) {
                             TextButton(onClick = { settings = true }) { Text("Настройки") }
                         }
                         when (tab) {
-                            0 -> TodayScreen(requireNotNull(ledger), busy, now, vm::confirm)
-                            1 -> CalendarScreen(requireNotNull(ledger), busy, now, vm::confirm)
+                            0 ->
+                                TodayScreen(requireNotNull(ledger), busy, now, saveShift) {
+                                    ConsentBanner(preferences.adConsent && !suppressAds)
+                                }
+                            1 -> CalendarScreen(requireNotNull(ledger), busy, now, saveShift)
                             else -> MoneyScreen(requireNotNull(ledger), vm, now)
                         }
                     }
@@ -394,7 +404,13 @@ private fun SetupForm(
 }
 
 @Composable
-private fun TodayScreen(ledger: Ledger, busy: Boolean, now: Instant, save: (Shift) -> Unit) {
+private fun TodayScreen(
+    ledger: Ledger,
+    busy: Boolean,
+    now: Instant,
+    save: (Shift) -> Unit,
+    banner: @Composable () -> Unit,
+) {
     val schedule = requireNotNull(ledger.schedule)
     val today = now.atZone(ZoneId.of(schedule.zone)).toLocalDate()
     val period = Period.containing(today, schedule.periodDay)
@@ -494,6 +510,7 @@ private fun TodayScreen(ledger: Ledger, busy: Boolean, now: Instant, save: (Shif
         Text(
             "Сумма к выплате зависит от удержаний и расчётного листка. Добавьте их в разделе «Деньги»."
         )
+        if (edit == null) banner()
     }
     edit?.let { s ->
         ShiftEditor(s, busy, { edit = null }) {
@@ -1033,6 +1050,7 @@ private fun SettingsScreen(
     var editRate by remember { mutableStateOf(false) }
     var erase by remember { mutableStateOf(false) }
     var csvConfirm by remember { mutableStateOf(false) }
+    var showAdConsent by remember { mutableStateOf(false) }
     var fileAction by remember { mutableStateOf<String?>(null) }
     var pendingPassword by remember { mutableStateOf<CharArray?>(null) }
     val backupLauncher =
@@ -1147,6 +1165,23 @@ private fun SettingsScreen(
                 style = MaterialTheme.typography.bodySmall,
             )
         }
+        Section("Реклама") {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("Баннер на экране «Сегодня»", Modifier.weight(1f))
+                Switch(
+                    checked = preferences.adConsent,
+                    onCheckedChange = { enabled ->
+                        if (enabled) showAdConsent = true
+                        else vm.preferences(preferences.copy(adConsent = false))
+                    },
+                    modifier = Modifier.semantics { contentDescription = "Согласие на рекламу" },
+                )
+            }
+            Text(
+                "Реклама необязательна для учёта. Только баннер после основной информации; без полноэкранных объявлений. До вашего согласия SDK не инициализируется. Доступность объявления зависит от сети.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
         Section("Ваши данные") {
             OutlinedButton(enabled = !busy, onClick = { csvConfirm = true }) { Text("Экспорт CSV") }
             OutlinedButton(enabled = !busy, onClick = { fileAction = "backup" }) {
@@ -1165,7 +1200,7 @@ private fun SettingsScreen(
         }
         Section("Конфиденциальность") {
             Text(
-                "Данные о сменах, начислениях и выплатах хранятся на этом устройстве. Нет аккаунта, облачной синхронизации, рекламного SDK и внешней аналитики в этой версии. Автоматическое системное резервное копирование отключено; делайте свою зашифрованную копию."
+                "Данные о сменах, начислениях и выплатах хранятся на этом устройстве. Нет аккаунта и облачной синхронизации. Если вы разрешили рекламу, SDK Яндекса и встроенные компоненты могут обрабатывать технические и рекламные идентификаторы, сведения об устройстве и показах. Финансовые записи в рекламные запросы не добавляются. Отдельная продуктовая аналитика разработчику не отправляется. Автоматическое системное резервное копирование отключено; делайте свою зашифрованную копию."
             )
             Text(
                 "Приложение помогает сверить собственные записи. Оно не рассчитывает автоматически все налоги и юридические надбавки."
@@ -1217,6 +1252,43 @@ private fun SettingsScreen(
                 Text("Сохранить условия")
             }
         }
+    if (showAdConsent)
+        AlertDialog(
+            onDismissRequest = { showAdConsent = false },
+            title = { Text("Разрешить рекламу Яндекса?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Yandex Mobile Ads и встроенная AppMetrica могут передавать технические и рекламные идентификаторы, IP-адрес, данные об устройстве и взаимодействиях с рекламой. Зарплата, смены и выплаты в запросы не включаются. Геолокация SDK отключена. Согласие можно отозвать здесь; новые баннеры загружаться не будут."
+                    )
+                    TextButton(
+                        onClick = {
+                            context.startActivity(
+                                android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW,
+                                    android.net.Uri.parse("https://yandex.ru/legal/confidential/"),
+                                )
+                            )
+                        }
+                    ) {
+                        Text("Политика Яндекса")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        vm.preferences(preferences.copy(adConsent = true))
+                        showAdConsent = false
+                    }
+                ) {
+                    Text("Разрешить")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAdConsent = false }) { Text("Без рекламы") }
+            },
+        )
     if (csvConfirm)
         AlertDialog(
             onDismissRequest = { csvConfirm = false },
