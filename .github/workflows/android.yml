@@ -38,6 +38,7 @@ jobs:
           path: |
             app/build/outputs/apk/debug/*.apk
             app/build/reports/
+            app/schemas/
           retention-days: 14
   dependencies:
     name: Dependency review

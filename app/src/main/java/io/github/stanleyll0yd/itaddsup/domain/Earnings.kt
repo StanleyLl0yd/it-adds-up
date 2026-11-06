@@ -12,6 +12,7 @@ enum class PayType {
 }
 
 enum class ShiftStatus {
+    PLANNED,
     CONFIRMED,
     ABSENT,
     CANCELLED,
@@ -206,7 +207,6 @@ data class Reconciliation(
     val payments: List<Payment>,
 ) {
     init {
-        require(ownGross >= 0)
         require(employerGross == null || employerGross >= 0)
         require(deductions == null || deductions >= 0)
     }
