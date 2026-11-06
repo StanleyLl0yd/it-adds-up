@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euxo pipefail
 # Core scenarios must work with the emulator disconnected from networks.
-adb shell svc wifi disable
-adb shell svc data disable
+adb shell svc wifi disable || true
+adb shell svc data disable || true
 ./gradlew connectedDebugAndroidTest --stacktrace
 # Gradle uninstalls the target after its test run. Reinstall and capture the real
 # application once more before pulling screenshots, without Gradle cleanup.
