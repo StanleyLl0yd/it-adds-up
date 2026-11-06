@@ -301,6 +301,7 @@ class PreferencesRepository(private val context: Context) {
     private val theme = stringPreferencesKey("theme")
     private val dynamic = booleanPreferencesKey("dynamic")
     private val reminders = booleanPreferencesKey("reminders")
+    private val notified = stringSetPreferencesKey("notified")
     val flow: Flow<Preferences> =
         context.preferences.data.map {
             Preferences(it[theme] ?: "system", it[dynamic] ?: true, it[reminders] ?: false)
@@ -311,6 +312,15 @@ class PreferencesRepository(private val context: Context) {
             it[theme] = value.theme
             it[dynamic] = value.dynamic
             it[reminders] = value.reminders
+        }
+    }
+
+    suspend fun wasNotified(date: String): Boolean =
+        context.preferences.data.first()[notified]?.contains(date) == true
+
+    suspend fun markNotified(date: String) {
+        context.preferences.edit {
+            it[notified] = ((it[notified] ?: emptySet()) + date).sorted().takeLast(32).toSet()
         }
     }
 

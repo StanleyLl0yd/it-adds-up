@@ -29,6 +29,8 @@ import io.github.stanleyll0yd.itaddsup.domain.*
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
 
 private val ru = Locale.forLanguageTag("ru-RU")
 
@@ -60,6 +62,15 @@ private fun planned(ledger: Ledger, date: LocalDate): Shift? {
 
 @Composable
 fun TrackerApp(vm: TrackerViewModel) {
+    val clock = remember {
+        flow {
+            while (true) {
+                emit(Instant.now())
+                delay(30000)
+            }
+        }
+    }
+    val now by clock.collectAsStateWithLifecycle(initialValue = Instant.now())
     val ledger by vm.ledger.collectAsStateWithLifecycle()
     val preferences by vm.preferences.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
@@ -119,9 +130,9 @@ fun TrackerApp(vm: TrackerViewModel) {
                             TextButton(onClick = { settings = true }) { Text("Настройки") }
                         }
                         when (tab) {
-                            0 -> TodayScreen(requireNotNull(ledger), busy, vm::confirm)
-                            1 -> CalendarScreen(requireNotNull(ledger), busy, vm::confirm)
-                            else -> MoneyScreen(requireNotNull(ledger), vm)
+                            0 -> TodayScreen(requireNotNull(ledger), busy, now, vm::confirm)
+                            1 -> CalendarScreen(requireNotNull(ledger), busy, now, vm::confirm)
+                            else -> MoneyScreen(requireNotNull(ledger), vm, now)
                         }
                     }
                 }
@@ -383,9 +394,9 @@ private fun SetupForm(
 }
 
 @Composable
-private fun TodayScreen(ledger: Ledger, busy: Boolean, save: (Shift) -> Unit) {
+private fun TodayScreen(ledger: Ledger, busy: Boolean, now: Instant, save: (Shift) -> Unit) {
     val schedule = requireNotNull(ledger.schedule)
-    val today = LocalDate.now(ZoneId.of(schedule.zone))
+    val today = now.atZone(ZoneId.of(schedule.zone)).toLocalDate()
     val period = Period.containing(today, schedule.periodDay)
     val shifts = ledger.shifts.map { it.domain() }.filter { it.date in period }
     val confirmed = total(shifts)
@@ -501,9 +512,9 @@ private fun statusText(status: ShiftStatus): String =
     }
 
 @Composable
-private fun CalendarScreen(ledger: Ledger, busy: Boolean, save: (Shift) -> Unit) {
+private fun CalendarScreen(ledger: Ledger, busy: Boolean, now: Instant, save: (Shift) -> Unit) {
     val schedule = requireNotNull(ledger.schedule)
-    val today = LocalDate.now(ZoneId.of(schedule.zone))
+    val today = now.atZone(ZoneId.of(schedule.zone)).toLocalDate()
     var monthText by rememberSaveable { mutableStateOf(YearMonth.from(today).toString()) }
     var selectedText by rememberSaveable { mutableStateOf(today.toString()) }
     val month = YearMonth.parse(monthText)
@@ -785,9 +796,9 @@ private fun ShiftEditor(original: Shift, busy: Boolean, close: () -> Unit, save:
 }
 
 @Composable
-private fun MoneyScreen(ledger: Ledger, vm: TrackerViewModel) {
+private fun MoneyScreen(ledger: Ledger, vm: TrackerViewModel, now: Instant) {
     val row = requireNotNull(ledger.schedule)
-    val today = LocalDate.now(ZoneId.of(row.zone))
+    val today = now.atZone(ZoneId.of(row.zone)).toLocalDate()
     var periodText by rememberSaveable {
         mutableStateOf(Period.containing(today, row.periodDay).start.toString())
     }

@@ -23,8 +23,19 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    signingConfigs {
+        if (System.getenv("RELEASE_STORE_FILE") != null) {
+            create("production") {
+                storeFile = file(requireNotNull(System.getenv("RELEASE_STORE_FILE")))
+                storePassword = requireNotNull(System.getenv("RELEASE_STORE_PASSWORD"))
+                keyAlias = requireNotNull(System.getenv("RELEASE_KEY_ALIAS"))
+                keyPassword = requireNotNull(System.getenv("RELEASE_KEY_PASSWORD"))
+            }
+        }
+    }
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("production")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

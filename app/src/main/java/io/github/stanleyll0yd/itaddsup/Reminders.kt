@@ -63,6 +63,7 @@ class ReminderWorker(context: Context, parameters: WorkerParameters) :
                     date,
                     ledger.rates.map { it.domain() },
                 ) ?: continue
+            if (app.preferences.wasNotified(date.toString())) continue
             val end = schedule.planned(date, rule).time.end
             if (now < end || Duration.between(end, now).toHours() >= 24) continue
             val pending =
@@ -90,6 +91,7 @@ class ReminderWorker(context: Context, parameters: WorkerParameters) :
                     .setOnlyAlertOnce(true)
                     .build()
             manager.notify(date.toEpochDay().toInt(), notification)
+            app.preferences.markNotified(date.toString())
         }
         return Result.success()
     }
