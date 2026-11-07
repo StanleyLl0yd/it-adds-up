@@ -65,6 +65,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
       - name: Build with owner-provided production signing
         env:
+          YANDEX_BANNER_ID: ${{ vars.YANDEX_BANNER_ID }}
           RELEASE_STORE_BASE64: ${{ secrets.RELEASE_STORE_BASE64 }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}

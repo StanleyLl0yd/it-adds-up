@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -17,15 +18,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.net.toUri
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.stanleyll0yd.itaddsup.BuildConfig
+import io.github.stanleyll0yd.itaddsup.R
 import io.github.stanleyll0yd.itaddsup.TrackerViewModel
 import io.github.stanleyll0yd.itaddsup.data.*
 import io.github.stanleyll0yd.itaddsup.domain.*
+import io.github.stanleyll0yd.itaddsup.monetization.ConsentBanner
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -78,6 +85,12 @@ fun TrackerApp(vm: TrackerViewModel) {
     val snackbar = remember { SnackbarHostState() }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var settings by rememberSaveable { mutableStateOf(false) }
+    var suppressAds by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(tab) { suppressAds = false }
+    val saveShift: (Shift) -> Unit = {
+        suppressAds = true
+        vm.confirm(it)
+    }
     LaunchedEffect(message) {
         message?.let {
             snackbar.showSnackbar(it)
@@ -130,8 +143,11 @@ fun TrackerApp(vm: TrackerViewModel) {
                             TextButton(onClick = { settings = true }) { Text("Настройки") }
                         }
                         when (tab) {
-                            0 -> TodayScreen(requireNotNull(ledger), busy, now, vm::confirm)
-                            1 -> CalendarScreen(requireNotNull(ledger), busy, now, vm::confirm)
+                            0 ->
+                                TodayScreen(requireNotNull(ledger), busy, now, saveShift) {
+                                    ConsentBanner(preferences.adConsent && !suppressAds)
+                                }
+                            1 -> CalendarScreen(requireNotNull(ledger), busy, now, saveShift)
                             else -> MoneyScreen(requireNotNull(ledger), vm, now)
                         }
                     }
@@ -143,11 +159,16 @@ fun TrackerApp(vm: TrackerViewModel) {
 
 @Composable
 private fun NavGlyph(index: Int) {
-    val names = listOf("День", "Календарь", "Расчёты")
-    Text(
-        listOf("◷", "▦", "₽")[index],
-        modifier = Modifier.clearAndSetSemantics { contentDescription = names[index] },
-        style = MaterialTheme.typography.titleLarge,
+    Icon(
+        painterResource(
+            when (index) {
+                0 -> R.drawable.nav_today
+                1 -> R.drawable.nav_shifts
+                else -> R.drawable.nav_money
+            }
+        ),
+        contentDescription = null,
+        modifier = Modifier.size(24.dp),
     )
 }
 
@@ -160,14 +181,36 @@ fun AppTheme(preferences: Preferences = Preferences(), content: @Composable () -
             "light" -> false
             else -> isSystemInDarkTheme()
         }
+    val view = androidx.compose.ui.platform.LocalView.current
+    SideEffect {
+        val activity = view.context as? android.app.Activity
+        activity?.let {
+            WindowCompat.getInsetsController(it.window, view).apply {
+                isAppearanceLightStatusBars = !dark
+                isAppearanceLightNavigationBars = !dark
+            }
+        }
+    }
     val colors =
         if (preferences.dynamic && Build.VERSION.SDK_INT >= 31) {
             if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        } else if (dark) darkColorScheme(primary = Color(0xFF8BD5BB), secondary = Color(0xFFB5CCC2))
+        } else if (dark)
+            darkColorScheme(
+                primary = Color(0xFF8BD5BB),
+                secondary = Color(0xFFB5CCC2),
+                primaryContainer = Color(0xFF164D3D),
+                onPrimaryContainer = Color(0xFFD2F5E7),
+                secondaryContainer = Color(0xFF304B40),
+                onSecondaryContainer = Color(0xFFD4EAE0),
+            )
         else
             lightColorScheme(
                 primary = Color(0xFF1D6653),
                 secondary = Color(0xFF4C635A),
+                primaryContainer = Color(0xFFD6EFE2),
+                onPrimaryContainer = Color(0xFF123C32),
+                secondaryContainer = Color(0xFFDDECE4),
+                onSecondaryContainer = Color(0xFF213930),
                 background = Color(0xFFF7FAF6),
             )
     MaterialTheme(colorScheme = colors, content = content)
@@ -394,7 +437,13 @@ private fun SetupForm(
 }
 
 @Composable
-private fun TodayScreen(ledger: Ledger, busy: Boolean, now: Instant, save: (Shift) -> Unit) {
+private fun TodayScreen(
+    ledger: Ledger,
+    busy: Boolean,
+    now: Instant,
+    save: (Shift) -> Unit,
+    banner: @Composable () -> Unit,
+) {
     val schedule = requireNotNull(ledger.schedule)
     val today = now.atZone(ZoneId.of(schedule.zone)).toLocalDate()
     val period = Period.containing(today, schedule.periodDay)
@@ -427,11 +476,13 @@ private fun TodayScreen(ledger: Ledger, busy: Boolean, now: Instant, save: (Shif
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text("Подтверждено за период", style = MaterialTheme.typography.labelLarge)
-                Text(
-                    Money.text(confirmed),
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                AnimatedContent(confirmed, label = "confirmed-earnings") { amount ->
+                    Text(
+                        Money.text(amount),
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
                 Text(
                     "${period.start.display()} — ${period.endExclusive.minusDays(1).display()}",
                     style = MaterialTheme.typography.bodySmall,
@@ -493,9 +544,8 @@ private fun TodayScreen(ledger: Ledger, busy: Boolean, now: Instant, save: (Shif
         Value("Ожидаемая дата выплаты", payday.display())
         val statement = ledger.statements.firstOrNull { it.period == period.start.toString() }
         val expectedNet =
-            statement?.gross?.let { gross ->
-                statement.deductions?.let { Math.subtractExact(gross, it) }
-            }
+            Reconciliation(confirmed, statement?.gross, statement?.deductions, emptyList())
+                .employerNet
         if (expectedNet != null) {
             Value("По расчётному листку к выплате за весь период", Money.text(expectedNet))
             Text(
@@ -506,6 +556,7 @@ private fun TodayScreen(ledger: Ledger, busy: Boolean, now: Instant, save: (Shif
             Text(
                 "Сумма к выплате зависит от удержаний и расчётного листка. Добавьте их в разделе «Деньги»."
             )
+        if (edit == null) banner()
     }
     edit?.let { s ->
         ShiftEditor(s, busy, { edit = null }) {
@@ -1049,6 +1100,7 @@ private fun SettingsScreen(
     var editRate by remember { mutableStateOf(false) }
     var erase by remember { mutableStateOf(false) }
     var csvConfirm by remember { mutableStateOf(false) }
+    var showAdConsent by remember { mutableStateOf(false) }
     var fileAction by remember { mutableStateOf<String?>(null) }
     var pendingPassword by remember { mutableStateOf<CharArray?>(null) }
     val backupLauncher =
@@ -1163,6 +1215,23 @@ private fun SettingsScreen(
                 style = MaterialTheme.typography.bodySmall,
             )
         }
+        Section("Реклама") {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("Баннер на экране «Сегодня»", Modifier.weight(1f))
+                Switch(
+                    checked = preferences.adConsent,
+                    onCheckedChange = { enabled ->
+                        if (enabled) showAdConsent = true
+                        else vm.preferences(preferences.copy(adConsent = false))
+                    },
+                    modifier = Modifier.semantics { contentDescription = "Согласие на рекламу" },
+                )
+            }
+            Text(
+                "Реклама необязательна для учёта. Только баннер после основной информации; без полноэкранных объявлений. До вашего согласия SDK не инициализируется. Доступность объявления зависит от сети.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
         Section("Ваши данные") {
             OutlinedButton(enabled = !busy, onClick = { csvConfirm = true }) { Text("Экспорт CSV") }
             OutlinedButton(enabled = !busy, onClick = { fileAction = "backup" }) {
@@ -1181,13 +1250,13 @@ private fun SettingsScreen(
         }
         Section("Конфиденциальность") {
             Text(
-                "Данные о сменах, начислениях и выплатах хранятся на этом устройстве. Нет аккаунта, облачной синхронизации, рекламного SDK и внешней аналитики в этой версии. Автоматическое системное резервное копирование отключено; делайте свою зашифрованную копию."
+                "Данные о сменах, начислениях и выплатах хранятся на этом устройстве. Нет аккаунта и облачной синхронизации. Если вы разрешили рекламу, SDK Яндекса и встроенные компоненты могут обрабатывать технические и рекламные идентификаторы, сведения об устройстве и показах. Финансовые записи в рекламные запросы не добавляются. Отдельная продуктовая аналитика разработчику не отправляется. Автоматическое системное резервное копирование отключено; делайте свою зашифрованную копию."
             )
             Text(
                 "Приложение помогает сверить собственные записи. Оно не рассчитывает автоматически все налоги и юридические надбавки."
             )
             Text(
-                "Версия 0.2.0-alpha.1 · Название предварительное",
+                "Версия ${BuildConfig.VERSION_NAME} · Название предварительное",
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -1233,6 +1302,43 @@ private fun SettingsScreen(
                 Text("Сохранить условия")
             }
         }
+    if (showAdConsent)
+        AlertDialog(
+            onDismissRequest = { showAdConsent = false },
+            title = { Text("Разрешить рекламу Яндекса?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Yandex Mobile Ads и встроенная AppMetrica могут передавать технические и рекламные идентификаторы, IP-адрес, данные об устройстве и взаимодействиях с рекламой. Зарплата, смены и выплаты в запросы не включаются. Геолокация SDK отключена. Согласие можно отозвать здесь; новые баннеры загружаться не будут."
+                    )
+                    TextButton(
+                        onClick = {
+                            context.startActivity(
+                                android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW,
+                                    "https://yandex.ru/legal/confidential/".toUri(),
+                                )
+                            )
+                        }
+                    ) {
+                        Text("Политика Яндекса")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        vm.preferences(preferences.copy(adConsent = true))
+                        showAdConsent = false
+                    }
+                ) {
+                    Text("Разрешить")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAdConsent = false }) { Text("Без рекламы") }
+            },
+        )
     if (csvConfirm)
         AlertDialog(
             onDismissRequest = { csvConfirm = false },

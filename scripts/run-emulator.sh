@@ -25,4 +25,13 @@ adb shell input keyevent 82
 adb shell settings put global window_animation_scale 0
 adb shell settings put global transition_animation_scale 0
 adb shell settings put global animator_duration_scale 0
-bash scripts/device-tests.sh
+if [[ "${2:-core}" == yandex ]]; then
+  ./gradlew assembleDebug assembleDebugAndroidTest
+  adb install -r -t app/build/outputs/apk/debug/app-debug.apk
+  adb install -r -t app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+  adb shell am instrument -w -r -e class io.github.stanleyll0yd.itaddsup.AdsNetworkTest io.github.stanleyll0yd.itaddsup.test/androidx.test.runner.AndroidJUnitRunner | tee ads-test.txt
+  adb pull /sdcard/Android/data/io.github.stanleyll0yd.itaddsup/files/screenshots screenshots
+  grep -F 'OK (1 test)' ads-test.txt
+else
+  bash scripts/device-tests.sh
+fi

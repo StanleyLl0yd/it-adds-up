@@ -295,16 +295,23 @@ data class Preferences(
     val theme: String = "system",
     val dynamic: Boolean = true,
     val reminders: Boolean = false,
+    val adConsent: Boolean = false,
 )
 
 class PreferencesRepository(private val context: Context) {
     private val theme = stringPreferencesKey("theme")
     private val dynamic = booleanPreferencesKey("dynamic")
     private val reminders = booleanPreferencesKey("reminders")
+    private val adConsent = booleanPreferencesKey("ad_consent_v1")
     private val notified = stringSetPreferencesKey("notified")
     val flow: Flow<Preferences> =
         context.preferences.data.map {
-            Preferences(it[theme] ?: "system", it[dynamic] ?: true, it[reminders] ?: false)
+            Preferences(
+                it[theme] ?: "system",
+                it[dynamic] ?: true,
+                it[reminders] ?: false,
+                it[adConsent] ?: false,
+            )
         }
 
     suspend fun save(value: Preferences) {
@@ -312,6 +319,7 @@ class PreferencesRepository(private val context: Context) {
             it[theme] = value.theme
             it[dynamic] = value.dynamic
             it[reminders] = value.reminders
+            it[adConsent] = value.adConsent
         }
     }
 
