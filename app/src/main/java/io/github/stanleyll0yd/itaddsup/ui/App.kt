@@ -23,8 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.core.view.WindowCompat
 import androidx.core.net.toUri
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.stanleyll0yd.itaddsup.R
 import io.github.stanleyll0yd.itaddsup.TrackerViewModel
@@ -528,7 +528,8 @@ private fun TodayScreen(
         Value("Ожидаемая дата выплаты", payday.display())
         val statement = ledger.statements.firstOrNull { it.period == period.start.toString() }
         val expectedNet =
-            Reconciliation(confirmed, statement?.gross, statement?.deductions, emptyList()).employerNet
+            Reconciliation(confirmed, statement?.gross, statement?.deductions, emptyList())
+                .employerNet
         if (expectedNet != null) {
             Value("По расчётному листку к выплате за весь период", Money.text(expectedNet))
             Text(

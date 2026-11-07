@@ -97,7 +97,7 @@ open class YandexBannerProvider(private val unitId: String) : BannerProvider {
 
                 override fun onAdClicked() = Unit
 
-                override fun onImpression(data: ImpressionData?) = Unit
+                override fun onImpression(impressionData: ImpressionData?) = Unit
             }
         )
         banner.loadAd(AdRequest.Builder(unitId).build())
@@ -161,7 +161,9 @@ fun ConsentBanner(consent: Boolean) {
                 .getOrDefault(NoAds)
         else NoAds
     }
-    LaunchedEffect(Unit) { if (!BuildConfig.DEBUG) allowed = RemoteAdsSwitch.enabled() }
+    LaunchedEffect(Unit) {
+        if (!BuildConfig.DEBUG && provider !== NoAds) allowed = RemoteAdsSwitch.enabled()
+    }
     if (!allowed || provider === NoAds) return
     var ready by remember { mutableStateOf(false) }
     LaunchedEffect(provider) {

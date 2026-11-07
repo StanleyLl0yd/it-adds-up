@@ -1,0 +1,37 @@
+name: Ads SDK smoke
+on:
+  pull_request:
+    types: [labeled]
+permissions:
+  contents: read
+jobs:
+  yandex-test-banner:
+    name: Yandex official test banner
+    if: github.event.label.name == 'yandex-smoke-approved' && github.event.pull_request.head.repo.full_name == github.repository && github.actor == 'StanleyLl0yd'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+        with:
+          cache-read-only: true
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - run: bash scripts/run-emulator.sh 36 yandex
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: official-yandex-test-${{ github.sha }}
+          path: |
+            ads-test.txt
+            emulator.log
+            screenshots/

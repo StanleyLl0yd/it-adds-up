@@ -1,18 +1,20 @@
 package io.github.stanleyll0yd.itaddsup
 
+import android.graphics.Bitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.platform.app.InstrumentationRegistry
 import io.github.stanleyll0yd.itaddsup.data.*
 import io.github.stanleyll0yd.itaddsup.domain.*
 import io.github.stanleyll0yd.itaddsup.monetization.AdsDiagnostics
+import java.io.File
 import java.time.*
 import kotlinx.coroutines.runBlocking
 import org.junit.*
 import org.junit.Assert.*
 
-@Ignore("Online test requires owner's explicit approval of Yandex test-emulator data transmission")
 class AdsNetworkTest {
     @get:Rule val compose = createEmptyComposeRule()
 
@@ -44,6 +46,12 @@ class AdsNetworkTest {
             compose.onNodeWithText("Реклама").performScrollTo()
             compose.waitUntil(60000) { AdsDiagnostics.loaded.value || AdsDiagnostics.failed.value }
             assertTrue("Official test banner did not load", AdsDiagnostics.loaded.value)
+            val folder = File(app.getExternalFilesDir(null), "screenshots").apply { mkdirs() }
+            val screenshot =
+                InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+            File(folder, "test-banner.png").outputStream().use {
+                screenshot.compress(Bitmap.CompressFormat.PNG, 100, it)
+            }
             compose.onNodeWithText("Настройки").performClick()
             compose
                 .onNodeWithContentDescription("Согласие на рекламу")
