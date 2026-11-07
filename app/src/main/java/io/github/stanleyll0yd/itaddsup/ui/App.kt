@@ -491,9 +491,21 @@ private fun TodayScreen(ledger: Ledger, busy: Boolean, now: Instant, save: (Shif
         HorizontalDivider()
         Value("Ближайшая смена", next?.display() ?: "Нет в ближайшем году")
         Value("Ожидаемая дата выплаты", payday.display())
-        Text(
-            "Сумма к выплате зависит от удержаний и расчётного листка. Добавьте их в разделе «Деньги»."
-        )
+        val statement = ledger.statements.firstOrNull { it.period == period.start.toString() }
+        val expectedNet =
+            statement?.gross?.let { gross ->
+                statement.deductions?.let { Math.subtractExact(gross, it) }
+            }
+        if (expectedNet != null) {
+            Value("По расчётному листку к выплате за весь период", Money.text(expectedNet))
+            Text(
+                "Сумма не определяет размер ближайшего аванса или отдельной выплаты.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        } else
+            Text(
+                "Сумма к выплате зависит от удержаний и расчётного листка. Добавьте их в разделе «Деньги»."
+            )
     }
     edit?.let { s ->
         ShiftEditor(s, busy, { edit = null }) {
