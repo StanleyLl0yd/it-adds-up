@@ -41,9 +41,7 @@ jobs:
         with:
           name: android-ui-api-${{ matrix.api }}-${{ github.sha }}
           path: |
-            app/build/reports/androidTests/
-            app/build/outputs/androidTest-results/
             screenshots/
-            screenshot-test.txt
+            device-tests.txt
             emulator.log
           retention-days: 14
