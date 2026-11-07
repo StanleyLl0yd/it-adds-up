@@ -27,6 +27,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.stanleyll0yd.itaddsup.BuildConfig
 import io.github.stanleyll0yd.itaddsup.R
 import io.github.stanleyll0yd.itaddsup.TrackerViewModel
 import io.github.stanleyll0yd.itaddsup.data.*
@@ -1255,7 +1256,7 @@ private fun SettingsScreen(
                 "Приложение помогает сверить собственные записи. Оно не рассчитывает автоматически все налоги и юридические надбавки."
             )
             Text(
-                "Версия 0.2.0-alpha.1 · Название предварительное",
+                "Версия ${BuildConfig.VERSION_NAME} · Название предварительное",
                 style = MaterialTheme.typography.bodySmall,
             )
         }

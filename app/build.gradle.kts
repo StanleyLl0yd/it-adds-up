@@ -11,8 +11,8 @@ android {
         applicationId = "io.github.stanleyll0yd.itaddsup"
         minSdk = 26
         targetSdk = 37
-        versionCode = 2
-        versionName = "0.2.0-alpha.1"
+        versionCode = 3
+        versionName = "0.3.0-alpha.1"
         val bannerId = providers.environmentVariable("YANDEX_BANNER_ID").orElse("").get()
         require(bannerId.isEmpty() || bannerId.matches(Regex("[A-Za-z0-9_-]{1,128}")))
         buildConfigField("String", "YANDEX_BANNER_ID", "\"$bannerId\"")
