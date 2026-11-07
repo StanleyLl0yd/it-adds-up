@@ -10,9 +10,14 @@ permissions:
   contents: read
 jobs:
   devices:
+    if: github.ref == 'refs/heads/main'
     uses: ./.github/workflows/android-ui.yml
   verify:
     needs: devices
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -30,6 +35,12 @@ jobs:
           cp app/build/outputs/bundle/release/*.aab release-artifacts/
           cp CHANGELOG.md release-artifacts/
           python3 scripts/release_metadata.py release-artifacts unsigned
+      - name: Attest unsigned Android binaries
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: |
+            release-artifacts/*.apk
+            release-artifacts/*.aab
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: unsigned-release-${{ github.sha }}
@@ -39,6 +50,10 @@ jobs:
     if: inputs.signed && github.ref == 'refs/heads/main'
     needs: verify
     environment: production
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -69,6 +84,12 @@ jobs:
           cp app/build/outputs/bundle/release/app-release.aab signed-release/
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose signed-release/app-release.apk
           python3 scripts/release_metadata.py signed-release signed
+      - name: Attest signed Android binaries
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: |
+            signed-release/*.apk
+            signed-release/*.aab
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: signed-release-${{ github.sha }}
