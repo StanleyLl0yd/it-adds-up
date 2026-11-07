@@ -46,10 +46,7 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
 
     fun saveRate(rule: PayRule) = action { repo.saveRate(rule) }
 
-    fun confirm(shift: Shift) = action {
-        repo.saveShift(shift)
-        message.value = "Смена сохранена. Чек доступен в календаре."
-    }
+    fun confirm(shift: Shift) = action { repo.saveShift(shift) }
 
     fun addPayment(period: LocalDate, date: LocalDate, amount: Long) = action {
         repo.addPayment(period, date, amount)

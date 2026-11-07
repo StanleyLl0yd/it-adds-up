@@ -110,10 +110,8 @@ class TrackerInstrumentedTest {
             }
         }
         compose.onNodeWithText("Редактировать смену").performScrollTo().performClick()
-        compose
-            .onNodeWithText("Корректировка · ₽, можно с минусом")
-            .performScrollTo()
-            .performTextReplacement("-100")
+        await("Сохранить смену")
+        compose.onNodeWithText("Корректировка · ₽").performScrollTo().performTextReplacement("-100")
         compose.onNodeWithText("Сохранить смену").performScrollTo().performClick()
         compose.waitUntil(15000) {
             runBlocking {
