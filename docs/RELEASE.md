@@ -4,7 +4,7 @@
 
 Основная ветка main защищена PR, strict required checks (Android build, lint and tests; Wrapper integrity; Dependency review), линейной историей и запретом force push/delete. Защита применяется к администраторам. Обязательных внешних approvals нет. CI работает с read-token; нет pull_request_target и secrets в fork PR.
 
-Workflow Release preparation сначала выполняет device tests API 26/36, затем release unit tests, Lint, сборку неподписанных APK/AAB. Метаданные включают версию, UTC-дату, commit SHA и SHA-256. CHANGELOG включён в комплект. Скрипт проверяет структуру архивов и отсутствие файлов ключей, локальной конфигурации и базы. Для каждого APK/AAB workflow создаёт GitHub artifact attestation. Проверка происхождения: `gh attestation verify ФАЙЛ -R StanleyLl0yd/it-adds-up`. Неподписанные артефакты предназначены для проверки и последующей подписи; их нельзя выдавать за опубликованный production-релиз.
+Workflow Release preparation сначала выполняет device tests API 26/36, затем unit-тесты, Lint release и сборку неподписанных APK/AAB. Метаданные включают версию, UTC-дату, commit SHA и SHA-256. CHANGELOG включён в комплект. Скрипт проверяет структуру архивов и отсутствие файлов ключей, локальной конфигурации и базы. Для каждого APK/AAB workflow создаёт GitHub artifact attestation. Проверка происхождения: `gh attestation verify ФАЙЛ -R StanleyLl0yd/it-adds-up`. Неподписанные артефакты предназначены для проверки и последующей подписи; их нельзя выдавать за опубликованный production-релиз.
 
 Оба магазина получают тот же native Android-проект без обязательных Google Play Services. Финальные допустимые форматы и требования кабинета RuStore/Google Play проверяются перед каждой отправкой. Публикация автоматикой не выполняется.
 
