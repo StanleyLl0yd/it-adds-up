@@ -1,6 +1,7 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.android)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.compose)
 }
 
 android {
@@ -10,8 +11,8 @@ android {
         applicationId = "io.github.stanleyll0yd.itaddsup"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0-alpha.1"
+        versionCode = 2
+        versionName = "0.2.0-alpha.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures {
@@ -22,8 +23,19 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    signingConfigs {
+        if (System.getenv("RELEASE_STORE_FILE") != null) {
+            create("production") {
+                storeFile = file(requireNotNull(System.getenv("RELEASE_STORE_FILE")))
+                storePassword = requireNotNull(System.getenv("RELEASE_STORE_PASSWORD"))
+                keyAlias = requireNotNull(System.getenv("RELEASE_KEY_ALIAS"))
+                keyPassword = requireNotNull(System.getenv("RELEASE_KEY_PASSWORD"))
+            }
+        }
+    }
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("production")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -39,16 +51,25 @@ android {
 }
 
 dependencies {
-    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
-    implementation("androidx.activity:activity-compose:1.13.0")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2026.09.00"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    androidTestImplementation("androidx.test:runner:1.7.0")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation(platform(libs.compose.bom))
+    implementation(libs.activity.compose)
+    implementation(libs.compose.material3)
+    implementation(libs.compose.preview)
+    debugImplementation(libs.compose.tooling)
+    implementation(libs.lifecycle.runtime)
+    implementation(libs.lifecycle.viewmodel)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+    implementation(libs.datastore)
+    implementation(libs.work)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.room.testing)
+    androidTestImplementation(libs.test.core)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.test)
+    androidTestImplementation(libs.test.runner)
+    debugImplementation(libs.compose.test.manifest)
 }
+
+ksp { arg("room.schemaLocation", "$projectDir/schemas") }
