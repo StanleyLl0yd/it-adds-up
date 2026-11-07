@@ -11,8 +11,11 @@ android {
         applicationId = "io.github.stanleyll0yd.itaddsup"
         minSdk = 26
         targetSdk = 37
-        versionCode = 2
-        versionName = "0.2.0-alpha.1"
+        versionCode = 3
+        versionName = "0.3.0-alpha.1"
+        val bannerId = providers.environmentVariable("YANDEX_BANNER_ID").orElse("").get()
+        require(bannerId.isEmpty() || bannerId.matches(Regex("[A-Za-z0-9_-]{1,128}")))
+        buildConfigField("String", "YANDEX_BANNER_ID", "\"$bannerId\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures {
@@ -63,6 +66,7 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.datastore)
     implementation(libs.work)
+    implementation(libs.yandex.ads)
     testImplementation(libs.junit)
     androidTestImplementation(libs.room.testing)
     androidTestImplementation(libs.test.core)

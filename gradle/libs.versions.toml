@@ -14,6 +14,7 @@ junit = "4.13.2"
 android-test = "1.7.0"
 
 [libraries]
+yandex-ads = { module = "com.yandex.android:mobileads", version = "8.6.0" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-tooling = { module = "androidx.compose.ui:ui-tooling" }
