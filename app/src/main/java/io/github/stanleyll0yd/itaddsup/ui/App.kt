@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.view.WindowCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.stanleyll0yd.itaddsup.R
 import io.github.stanleyll0yd.itaddsup.TrackerViewModel
@@ -525,9 +526,19 @@ private fun TodayScreen(
         HorizontalDivider()
         Value("Ближайшая смена", next?.display() ?: "Нет в ближайшем году")
         Value("Ожидаемая дата выплаты", payday.display())
-        Text(
-            "Сумма к выплате зависит от удержаний и расчётного листка. Добавьте их в разделе «Деньги»."
-        )
+        val statement = ledger.statements.firstOrNull { it.period == period.start.toString() }
+        val expectedNet =
+            Reconciliation(confirmed, statement?.gross, statement?.deductions, emptyList()).employerNet
+        if (expectedNet != null) {
+            Value("По расчётному листку к выплате за весь период", Money.text(expectedNet))
+            Text(
+                "Сумма не определяет размер ближайшего аванса или отдельной выплаты.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        } else
+            Text(
+                "Сумма к выплате зависит от удержаний и расчётного листка. Добавьте их в разделе «Деньги»."
+            )
         if (edit == null) banner()
     }
     edit?.let { s ->
@@ -1284,7 +1295,7 @@ private fun SettingsScreen(
                             context.startActivity(
                                 android.content.Intent(
                                     android.content.Intent.ACTION_VIEW,
-                                    android.net.Uri.parse("https://yandex.ru/legal/confidential/"),
+                                    "https://yandex.ru/legal/confidential/".toUri(),
                                 )
                             )
                         }
