@@ -169,8 +169,13 @@ class TrackerInstrumentedTest {
 
     @Test
     fun screenshotsOfRealApplication() {
-        seed()
-        runBlocking { app.preferences.save(Preferences(theme = "light", dynamic = false)) }
+        val original = seed()
+        runBlocking {
+            val period = original.date.withDayOfMonth(1)
+            app.repository.statement(StatementRow(period.toString(), 226000, 24000))
+            app.repository.addPayment(period, original.date, 180000)
+            app.preferences.save(Preferences(theme = "light", dynamic = false))
+        }
         launch()
         await("Подтверждено за период")
         screenshot("today")
@@ -180,6 +185,8 @@ class TrackerInstrumentedTest {
         compose.onNodeWithText("Деньги", useUnmergedTree = false).performClick()
         await("Свой расчёт · подтверждено до удержаний")
         screenshot("money")
+        compose.onNodeWithText("По листку к выплате · после удержаний").performScrollTo()
+        screenshot("reconciliation")
         compose.onNodeWithText("Настройки").performClick()
         await("Тёмная")
         compose.onNodeWithText("Тёмная").performClick()
@@ -222,6 +229,14 @@ class TrackerInstrumentedTest {
 
     private fun screenshot(name: String) {
         compose.waitForIdle()
+        val frame = java.util.concurrent.CountDownLatch(1)
+        requireNotNull(scenario).onActivity { activity ->
+            val view = activity.window.decorView
+            view.postOnAnimation { view.postOnAnimation { frame.countDown() } }
+        }
+        check(frame.await(5, java.util.concurrent.TimeUnit.SECONDS)) {
+            "Application frame did not render"
+        }
         val bitmap = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
         val folder = File(app.getExternalFilesDir(null), "screenshots").apply { mkdirs() }
         File(folder, "$name.png").outputStream().use {
