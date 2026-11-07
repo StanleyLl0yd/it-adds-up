@@ -1,0 +1,17 @@
+name: Ошибка
+description: Опишите воспроизводимый случай с искусственными суммами
+labels: []
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Версия приложения и Android
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Как повторить и что ожидалось
+      description: Не добавляйте реальные зарплаты, пароли, резервные копии и персональные сведения.
+    validations:
+      required: true

@@ -1,14 +1,11 @@
-# Handoff
+# Передача работы
 
-- Репозиторий: https://github.com/StanleyLl0yd/it-adds-up
-- Protected main: 425bb93a880b9c8468b2d4f8b2e15af5d036cbcc (проверено GitHub API).
-- M0 завершён: проект, CI, иконка, темы, README, защита main; PR #12 слит, main CI #42301625043 success.
-- M1–M2 в работе: PR #11 расчётного движка; Issues #1–3.
-- Арифметика: копейки/BigDecimal HALF_UP, снимки условий смены, время через Instant + ZoneId, план не подтверждается автоматически.
-- Учёт/Room/DataStore/UI/резервные копии — в feature/offline-tracker; не считать завершёнными до CI и device tests.
-- Branch protection: три required checks с app_id 15368, strict=true, admins=true, PR без обязательного внешнего reviewer, linear history, conversation resolution, no force/delete.
-- Сборки, тесты и артефакты в GitHub Actions; локальный SDK не установлен по пожеланию владельца.
-- Лицензия и финальный бренд не выбраны; production signing/ad IDs и публикация требуют владельца.
-- Далее: зелёный PR движка, PR локального трекера и UI/API26+36 tests, скриншоты, SDK рекламы и release preparation.
+- Репозиторий https://github.com/StanleyLl0yd/it-adds-up. Проверенный protected main `5358592b86b7ad83c72a79feae422f96630d9a89` после объединения PR локального учёта.
+- M0 завершён. PR #12 исправил Android Lint и правила backup. PR #11 добавил точный расчёт. Main требует PR и три проверки GitHub Actions, включая администраторов. Force push и удаление запрещены.
+- PR #15 слит. Локальный учёт, выплаты, сверка, CSV и парольная копия в main. Android CI 42351581071 и четыре сценария на каждом API 26/36 в запуске 42351580947 прошли. Issues #1 и #2 закрыты через PR.
+- PR #16 содержит Yandex SDK 8.6.0 с явным согласием, баннер только на «Сегодня», test/no-op/production и удалённое отключение. Владелец разрешил тест официального demo ID на GitHub-эмуляторе. Зелёный тест 42351597281 подтвердил загрузку официального баннера и отзыв согласия. Issue #3.
+- В GitHub Actions подготовлены unsigned release APK/AAB и проверка происхождения. Production environment защищён подтверждением владельца. Ключи, production ad ID, контакт оператора, магазинные аккаунты и beta остаются на стороне владельца.
+- Денежные суммы в копейках, отдельное округление строк `HALF_UP`, фактическое время `Instant + ZoneId`, снимок ставки для истории, Room/DataStore, парольная копия AES-GCM. Начисления и выплаты сравниваются отдельно.
+- Следующее действие — слить PR материалов выпуска после CI, обновить #16 от защищённого main и проверить его CI. Затем запустить неподписанную сборку выпуска и сохранить ссылки на APK/AAB в GitHub. Текущий SHA после merge проверять в API ветки.
 
 NEXT CHAT: continue from this handoff; do not restart completed work unless verification requires it.
