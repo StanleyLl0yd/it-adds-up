@@ -786,7 +786,11 @@ private fun ShiftEditor(original: Shift, busy: Boolean, close: () -> Unit, save:
                         true,
                     )
                 Field("Премия · ₽", bonus, { bonus = it }, true)
-                Field("Корректировка · ₽, можно с минусом", adjustment, { adjustment = it }, true)
+                Field("Корректировка · ₽", adjustment, { adjustment = it })
+                Text(
+                    "Уменьшение суммы укажите со знаком минус.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
                 Choice(ShiftStatus.entries.map(::statusText), status) { status = it }
                 Text(
                     "Условия оплаты сохраняются из исходной смены. Изменение ставки в настройках их не переписывает.",
