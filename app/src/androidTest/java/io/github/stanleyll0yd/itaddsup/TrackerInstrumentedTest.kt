@@ -206,8 +206,12 @@ class TrackerInstrumentedTest {
                     android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             }
             compose.waitUntil(10000) {
-                app.resources.configuration.orientation ==
-                    android.content.res.Configuration.ORIENTATION_LANDSCAPE
+                var renderedLandscape = false
+                scenario?.onActivity { activity ->
+                    val view = activity.window.decorView
+                    renderedLandscape = view.width > view.height
+                }
+                renderedLandscape
             }
             compose.waitForIdle()
             screenshot("landscape")

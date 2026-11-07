@@ -28,6 +28,7 @@ internal object AdsDiagnostics {
     val initialized = MutableStateFlow(false)
     val loaded = MutableStateFlow(false)
     val failed = MutableStateFlow(false)
+    val impression = MutableStateFlow(false)
 }
 
 /** Receives no ledger, pay, employer, date or financial parameters. */
@@ -82,6 +83,7 @@ open class YandexBannerProvider(private val unitId: String) : BannerProvider {
     override fun create(context: Context, widthDp: Int): BannerHandle {
         AdsDiagnostics.loaded.value = false
         AdsDiagnostics.failed.value = false
+        AdsDiagnostics.impression.value = false
         val size = BannerAdSize.sticky(context, widthDp)
         val banner = BannerAdView(context)
         banner.setAdSize(size)
@@ -98,7 +100,9 @@ open class YandexBannerProvider(private val unitId: String) : BannerProvider {
 
                 override fun onAdClicked() = Unit
 
-                override fun onImpression(impressionData: ImpressionData?) = Unit
+                override fun onImpression(impressionData: ImpressionData?) {
+                    AdsDiagnostics.impression.value = true
+                }
             }
         )
         banner.loadAd(AdRequest.Builder(unitId).build())

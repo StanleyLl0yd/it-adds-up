@@ -46,6 +46,7 @@ class AdsNetworkTest {
             compose.onNodeWithTag("yandex-banner-slot").performScrollTo().assertIsDisplayed()
             compose.waitUntil(60000) { AdsDiagnostics.loaded.value || AdsDiagnostics.failed.value }
             assertTrue("Official test banner did not load", AdsDiagnostics.loaded.value)
+            compose.waitUntil(30000) { AdsDiagnostics.impression.value }
             val folder = File(app.getExternalFilesDir(null), "screenshots").apply { mkdirs() }
             val screenshot =
                 InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
