@@ -188,7 +188,7 @@ fun ConsentBanner(consent: Boolean) {
         handle?.let { banner ->
             val height = with(LocalDensity.current) { banner.heightPx.toDp() }
             Column(
-                Modifier.fillMaxWidth().height(height + 32.dp),
+                Modifier.fillMaxWidth().height(height + 32.dp).testTag("yandex-banner-slot"),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
