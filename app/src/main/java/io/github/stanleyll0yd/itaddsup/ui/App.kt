@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -192,11 +193,23 @@ fun AppTheme(preferences: Preferences = Preferences(), content: @Composable () -
     val colors =
         if (preferences.dynamic && Build.VERSION.SDK_INT >= 31) {
             if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        } else if (dark) darkColorScheme(primary = Color(0xFF8BD5BB), secondary = Color(0xFFB5CCC2))
+        } else if (dark)
+            darkColorScheme(
+                primary = Color(0xFF8BD5BB),
+                secondary = Color(0xFFB5CCC2),
+                primaryContainer = Color(0xFF164D3D),
+                onPrimaryContainer = Color(0xFFD2F5E7),
+                secondaryContainer = Color(0xFF304B40),
+                onSecondaryContainer = Color(0xFFD4EAE0),
+            )
         else
             lightColorScheme(
                 primary = Color(0xFF1D6653),
                 secondary = Color(0xFF4C635A),
+                primaryContainer = Color(0xFFD6EFE2),
+                onPrimaryContainer = Color(0xFF123C32),
+                secondaryContainer = Color(0xFFDDECE4),
+                onSecondaryContainer = Color(0xFF213930),
                 background = Color(0xFFF7FAF6),
             )
     MaterialTheme(colorScheme = colors, content = content)
@@ -462,11 +475,13 @@ private fun TodayScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text("Подтверждено за период", style = MaterialTheme.typography.labelLarge)
-                Text(
-                    Money.text(confirmed),
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                AnimatedContent(confirmed, label = "confirmed-earnings") { amount ->
+                    Text(
+                        Money.text(amount),
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
                 Text(
                     "${period.start.display()} — ${period.endExclusive.minusDays(1).display()}",
                     style = MaterialTheme.typography.bodySmall,

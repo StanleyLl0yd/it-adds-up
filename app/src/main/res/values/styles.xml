@@ -1,1 +1,9 @@
-<resources><style name="Theme.ItAddsUp" parent="android:style/Theme.Material.Light.NoActionBar"><item name="android:fontFamily">sans</item><item name="android:windowLightStatusBar">true</item><item name="android:windowActionModeOverlay">true</item></style></resources>
+<resources>
+    <style name="Theme.ItAddsUp.Base" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowBackground">@drawable/splash_screen</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+    <style name="Theme.ItAddsUp" parent="Theme.ItAddsUp.Base" />
+</resources>
