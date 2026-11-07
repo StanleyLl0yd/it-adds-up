@@ -43,7 +43,7 @@ class AdsNetworkTest {
             compose.waitUntil(20000) {
                 compose.onAllNodesWithText("Реклама").fetchSemanticsNodes().isNotEmpty()
             }
-            compose.onNodeWithText("Реклама").performScrollTo()
+            compose.onNodeWithTag("yandex-banner-slot").performScrollTo().assertIsDisplayed()
             compose.waitUntil(60000) { AdsDiagnostics.loaded.value || AdsDiagnostics.failed.value }
             assertTrue("Official test banner did not load", AdsDiagnostics.loaded.value)
             val folder = File(app.getExternalFilesDir(null), "screenshots").apply { mkdirs() }

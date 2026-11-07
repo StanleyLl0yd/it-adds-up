@@ -192,7 +192,7 @@ class TrackerInstrumentedTest {
             scenario?.recreate()
             await("Сегодня")
             compose.waitForIdle()
-            compose.onNodeWithText("Деньги", useUnmergedTree = false).assertIsDisplayed()
+            compose.onNode(hasText("Деньги") and hasClickAction()).assertIsDisplayed()
             screenshot("large-font")
             scenario?.onActivity {
                 it.requestedOrientation =
