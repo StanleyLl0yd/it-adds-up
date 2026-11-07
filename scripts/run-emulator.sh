@@ -9,8 +9,9 @@ image="system-images;android-${api};google_apis;x86_64"
 sdkmanager --install "platforms;android-${api}" "$image" < /dev/null
 printf 'no\n' | avdmanager create avd --force -n tracker-test --package "$image" --device pixel_2 --path "$ANDROID_AVD_HOME/tracker-test.avd"
 test -f "$ANDROID_AVD_HOME/tracker-test.ini"
+export ANDROID_SERIAL=emulator-5554
 adb start-server
-"$ANDROID_HOME/emulator/emulator" -avd tracker-test -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -no-metrics -memory 1536 -cores 2 > emulator.log 2>&1 &
+"$ANDROID_HOME/emulator/emulator" -avd tracker-test -port 5554 -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -no-metrics -memory 1536 -cores 2 > emulator.log 2>&1 &
 emulator_pid=$!
 trap 'adb emu kill || true' EXIT
 booted=false
